@@ -74,12 +74,12 @@
 
 --b. Building off of the query you wrote for part a, determine whether more was spent (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY for easier comparision.
 
-SELECT drug.drug_name, SUM(prescription.total_drug_cost) AS MONEY
-CASE 
-	WHEN opioid_drug_flag = 'Y' THEN 'opioid' 
+SELECT 
+CASE WHEN opioid_drug_flag = 'Y' THEN 'opioid' 
 	WHEN drug.antibiotic_drug_flag = 'Y' THEN 'antibiotic'
-	ELSE 'neither' END AS drug_type
+	ELSE 'neither' END AS drug_type,
+	SUM(total_drug_cost) AS MONEY
 FROM drug
 	JOIN prescription USING (drug_name)
-GROUP BY MONEY;
+GROUP BY SUM(total_drug_cost);
 	
