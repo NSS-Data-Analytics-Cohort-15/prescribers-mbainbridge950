@@ -74,12 +74,106 @@
 
 --b. Building off of the query you wrote for part a, determine whether more was spent (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY for easier comparision.
 
-SELECT 
-CASE WHEN opioid_drug_flag = 'Y' THEN 'opioid' 
-	WHEN drug.antibiotic_drug_flag = 'Y' THEN 'antibiotic'
-	ELSE 'neither' END AS drug_type,
-	SUM(total_drug_cost) AS MONEY
-FROM drug
-	JOIN prescription USING (drug_name)
-GROUP BY SUM(total_drug_cost);
-	
+-- SELECT 
+-- CASE WHEN opioid_drug_flag = 'Y' THEN 'opioid' 
+-- 	WHEN drug.antibiotic_drug_flag = 'Y' THEN 'antibiotic'
+-- 	ELSE 'neither' END AS drug_type,
+-- 	SUM(prescription.total_drug_cost) AS MONEY
+-- FROM drug
+-- 	JOIN prescription USING (drug_name)
+-- GROUP BY drug_type;
+
+
+--Opioid
+
+--5. a. How many CBSAs are in Tennessee? Warning: The cbsa table contains information for all states, not just Tennessee.
+
+-- SELECT COUNT(cbsaname)
+-- FROM cbsa
+-- WHERE cbsaname LIKE '%TN%';
+
+--56
+
+--b. Which cbsa has the largest combined population? Which has the smallest? Report the CBSA name and total population.
+
+-- SELECT cbsa.cbsaname, SUM(population.population)
+-- FROM cbsa
+-- JOIN population
+-- USING (fipscounty)
+-- GROUP BY cbsa.cbsaname
+-- ORDER BY SUM(population.population) DESC;
+--Largest - "Nashville-Davidson--Murfreesboro--Franklin, TN"	1830410
+
+--Smallest "Morristown, TN"	116352
+
+--c. What is the largest (in terms of population) county which is not included in a CBSA? Report the county name and population.
+
+
+-- SELECT population, fips_county.county
+-- FROM population
+-- LEFT JOIN cbsa
+-- USING (fipscounty)
+-- LEFT JOIN fips_county
+-- USING (fipscounty)
+-- WHERE cbsa.cbsaname IS NULL
+-- ORDER BY population DESC;
+
+
+-- 95523	"SEVIER"
+
+-- SELECT cbsa.cbsaname, SUM(population.population)
+-- FROM population
+-- JOIN cbsa
+-- USING (fipscounty)
+-- GROUP BY cbsa.cbsaname
+-- ORDER BY SUM(population.population) DESC;
+
+--6.  a. Find all rows in the prescription table where total_claims is at least 3000. Report the drug_name and the total_claim_count.
+
+-- SELECT prescription.drug_name, prescription.total_claim_count
+-- FROM prescription
+-- WHERE total_claim_count >= 3000;
+
+--b. For each instance that you found in part a, add a column that indicates whether the drug is an opioid.
+
+SELECT prescription.drug_name, prescription.total_claim_count, drug.opioid_drug_flag
+FROM prescription
+LEFT JOIN drug
+USING (drug_name)
+WHERE total_claim_count >= 3000;
+
+--c. Add another column to you answer from the previous part which gives the prescriber first and last name associated with each row.
+
+-- SELECT prescription.drug_name, prescription.total_claim_count, drug.opioid_drug_flag, prescriber.nppes_provider_first_name, prescriber.nppes_provider_last_org_name
+-- FROM prescription
+-- LEFT JOIN drug
+-- USING (drug_name)
+-- LEFT JOIN prescriber
+-- USING (npi)
+-- WHERE total_claim_count >= 3000;
+
+--7.The goal of this exercise is to generate a full list of all pain management specialists in Nashville and the number of claims they had for each opioid. Hint: The results from all 3 parts will have 637 rows.
+
+--a. First, create a list of all npi/drug_name combinations for pain management specialists (specialty_description = 'Pain Management) in the city of Nashville (nppes_provider_city = 'NASHVILLE'), where the drug is an opioid (opiod_drug_flag = 'Y'). Warning: Double-check your query before running it. You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
+
+SELECT prescriber.specialty_description, drug.drug_name
+FROM prescriber
+JOIN prescription
+USING (npi)
+JOIN drug
+USING (drug_name)
+WHERE prescriber.specialty_description = 'Pain Management'
+AND prescriber.nppes_provider_city = 'NASHVILLE';
+
+--b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations, whether or not the prescriber had any claims. You should report the npi, the drug name, and the number of claims (total_claim_count).
+
+SELECT prescriber.specialty_description, drug.drug_name
+FROM prescriber
+JOIN prescription
+USING (npi)
+JOIN drug
+USING (drug_name)
+WHERE prescriber.specialty_description = 'Pain Management'
+AND prescriber.nppes_provider_city = 'NASHVILLE';
+
+--c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0. Hint - Google the COALESCE function.
